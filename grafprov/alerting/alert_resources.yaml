@@ -1,0 +1,103 @@
+
+############# NOT USED ############
+# global:
+#   resolve_timeout: 5m
+# route:
+#   group_by: ['alertname', 'severity']
+#   group_wait: "10s"
+#   group_interval: "5m"
+#   repeat_interval: "3h"
+# receivers:
+# - name: 'ashishlinuxaws@gmail.com'
+#   email_configs:
+#   - to: 'ashishlinuxaws@gmail.com'
+#     send_resolved: true
+# inhibit_rules:
+# - source_match:
+#     severity: 'critical'
+#   target_match:
+#     severity: 'warning'
+#   equal: ['alertname', 'instance']
+# #######################################
+# # apiVersion: 1
+# # muteTimes:
+# #     - orgId: 1
+# #       name: no_weekends
+# #       time_intervals:
+# #         - weekdays: [saturday, sunday]
+# # policies:
+# #   - name: Slack and Email Notifications
+# #     receiver: slack-and-email
+# #     group_by: ['alertname']
+# #     group_wait: 30s
+# #     group_interval: 5m
+# #     repeat_interval: 4h
+# #     routes:
+# #       - receiver: 'slack'
+# #         matchers:
+# #           - severity=~"warning|critical"
+# #       # - receiver: 'gmail'
+# #       #   matchers:
+# #       #     - severity=~"critical"
+
+# # receivers:
+# #   - name: slack
+# #     slack_configs:
+# #       - api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK_URL'
+# #         channel: '#alerts'
+# #         title: '{{ template "slack.default.title" . }}'
+# #         text: '{{ template "slack.default.text" . }}'
+
+# #   # - name: gmail
+# #   #   email_configs:
+# #   #     - to: 'ashishlinuxaws@gmail.com'
+# #   #       from: 'grafana-alerts@gmail.com'
+# #   #       smarthost: 'smtp.gmail.com:587'
+# #   #       auth_username: 'ashishlinuxaws@gmail.com'
+# #   #       auth_password: 'Mumbai@1809'
+# #   #       auth_identity: 'ashishlinuxaws@gmail.com'
+
+
+
+# # ########################################
+# # # policies:
+# # #     - orgId: 1
+# # #       receiver: My Contact Email Point
+# # #       group_by:
+# # #         - grafana_folder
+# # #         - alertname
+# # #       routes:
+# # #         - receiver: My Contact Email Point
+# # #           object_matchers:
+# # #             - - monitor
+# # #               - =
+# # #               - testdata
+# # #           mute_time_intervals:
+# # #             - no_weekends
+
+# # # contactPoints:
+# # #     - orgId: 1
+# # #       name: My Contact Email Point
+# # #       receivers:
+# # #         - uid: my_contact_email_point_uid
+# # #           type: email
+# # #           settings:
+# # #             addresses: your_email@company.org
+# # #             message: '{{ template "custom_email.message" .}}'
+# # #             singleEmail: false
+# # #             subject: '{{ template "custom_email.subject" .}}'
+# # #           disableResolveMessage: false
+
+# # # templates:
+# # #     - orgId: 1
+# # #       name: custom_email.message
+# # #       template: |
+# # #         {{ define "custom_email.message" }}
+# # #           Lorem ipsum - Custom alert!
+# # #         {{ end }}
+# # #     - orgId: 1
+# # #       name: custom_email.subject
+# # #       template: |
+# # #         {{ define "custom_email.subject" }}
+# # #         {{ len .Alerts.Firing }} firing alert(s), {{ len .Alerts.Resolved }} resolved alert(s)
+# # #         {{ end }}

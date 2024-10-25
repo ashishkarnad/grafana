@@ -1,0 +1,129 @@
+apiVersion: 1
+groups:
+- name: container_alerts
+  rules:
+  - alert: HighCPUUsage
+    expr: sum(rate(container_cpu_usage_seconds_total{name!=""}[1m])) by (name) > 0.5
+    for: "5m"
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage on {{ $labels.name }}"
+      description: "Container {{ $labels.name }} is using more than 50% CPU for 5 minutes."
+
+  - alert: HighMemoryUsage
+    expr: container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} * 100 > 80
+    for: "5m"
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on {{ $labels.name }}"
+      description: "Container {{ $labels.name }} is using more than 80% of its memory limit for 5 minutes."
+
+  - alert: ContainerKilled
+    expr: time() - container_last_seen{name!=""} > 60
+    for: "0m"
+    labels:
+      severity: warning
+    annotations:
+      summary: "Container {{ $labels.name }} killed"
+      description: "Container {{ $labels.name }} has been killed"
+
+  - alert: ContainerCpuThrottling
+    expr: rate(container_cpu_cfs_throttled_seconds_total[5m]) > 1
+    for: "5m"
+    labels:
+      severity: warning
+    annotations:
+      summary: "Container {{ $labels.name }} CPU throttling"
+      description: "Container {{ $labels.name }} is being throttled. This may indicate insufficient CPU resources."
+
+
+
+##################################################################
+
+# apiVersion: 1
+# groups:
+#     - orgId: 1
+#       name: group_1m
+#       folder: TestFolder
+#       interval: 1m
+#       rules:
+#         - uid: random_walk_threshold_uid 
+#           title: random_walk_threshold
+#           condition: C
+#           data:
+#             - refId: A
+#               relativeTimeRange:
+#                 from: 300
+#                 to: 0
+#               datasourceUid: testdata_uid
+#               model:
+#                 datasource:
+#                     type: grafana-testdata-datasource
+#                     uid: testdata_uid
+#                 intervalMs: 1000
+#                 maxDataPoints: 43200
+#                 refId: A
+#                 scenarioId: random_walk
+#             - refId: B
+#               datasourceUid: __expr__
+#               model:
+#                 conditions:
+#                     - evaluator:
+#                         params: []
+#                         type: gt
+#                       operator:
+#                         type: and
+#                       query:
+#                         params:
+#                             - B
+#                       reducer:
+#                         params: []
+#                         type: last
+#                       type: query
+#                 datasource:
+#                     type: __expr__
+#                     uid: __expr__
+#                 expression: A
+#                 intervalMs: 1000
+#                 maxDataPoints: 43200
+#                 reducer: mean
+#                 refId: B
+#                 type: reduce
+#             - refId: C
+#               datasourceUid: __expr__
+#               model:
+#                 conditions:
+#                     - evaluator:
+#                         params:
+#                             - 0
+#                         type: gt
+#                       operator:
+#                         type: and
+#                       query:
+#                         params:
+#                             - C
+#                       reducer:
+#                         params: []
+#                         type: last
+#                       type: query
+#                 datasource:
+#                     type: __expr__
+#                     uid: __expr__
+#                 expression: B
+#                 intervalMs: 1000
+#                 maxDataPoints: 43200
+#                 refId: C
+#                 type: threshold
+#           dashboardUid: random-walk
+#           panelId: 1
+#           noDataState: NoData
+#           execErrState: Error
+#           for: 0s
+#           annotations:
+#             __dashboardUid__: random-walk
+#             __panelId__: "1"
+#           labels:
+#             monitor: testdata
+#           isPaused: false

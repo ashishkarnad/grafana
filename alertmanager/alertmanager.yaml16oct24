@@ -1,0 +1,34 @@
+# global:
+#   resolve_timeout: 5m
+# route:
+#   group_by: ['alertname', 'severity']
+#   group_wait: 10s
+#   group_interval: 5m
+#   repeat_interval: 3h
+# receivers:
+# - name: 'email-notification'
+#   email_configs:
+#   - to: 'youremail@example.com'
+#     send_resolved: true
+# inhibit_rules:
+# - source_match:
+#     severity: 'critical'
+#   target_match:
+#     severity: 'warning'
+#   equal: ['alertname', 'instance']
+
+
+route:
+  receiver: 'mail'
+  repeat_interval: 4h
+  group_by: [ alertname ]
+
+
+receivers:
+  - name: 'mail'
+    email_configs:
+      - smarthost: 'smtp.gmail.com:465'
+        auth_username: 'ashishlinuxaws@gmail.com'
+        auth_password: "Mumbai@1809"
+        from: 'ashishlinuxaws@gmail.com'
+        to: 'ashishlinuxaws@gmail.com'

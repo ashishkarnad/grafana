@@ -1,0 +1,269 @@
+# prometheus/alert.rules.yml
+groups:
+  - name: host_monitoring
+    rules:
+      # Instance monitoring
+      - alert: InstanceDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} has been down for more than 5 minutes"
+          runbook_url: "https://wiki.example.com/runbook/instance-down"
+
+      # CPU Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes"
+          
+      - alert: CPUSaturation
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 95
+        for: 10m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "CPU saturation on {{ $labels.instance }}"
+          description: "CPU is nearly saturated ({{ $value }}%) for more than 10 minutes"
+
+      # Memory Alerts
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% for more than 5 minutes"
+
+      - alert: MemoryExhausted
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 95
+        for: 5m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "Memory exhausted on {{ $labels.instance }}"
+          description: "Memory is nearly exhausted ({{ $value }}%) for more than 5 minutes"
+
+      # Disk Alerts
+      - alert: DiskSpaceWarning
+        expr: 100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes) > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.device }} (mounted on {{ $labels.mountpoint }})"
+
+      - alert: DiskSpaceCritical
+        expr: 100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes) > 95
+        for: 5m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.device }} (mounted on {{ $labels.mountpoint }})"
+
+  - name: application_monitoring
+    rules:
+      # HTTP Errors
+      - alert: HighHTTPErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "High HTTP error rate"
+          description: "HTTP error rate is {{ $value }}% for more than 5 minutes"
+
+      # Latency
+      - alert: HighLatency
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High latency on {{ $labels.instance }}"
+          description: "HTTP request latency is {{ $value }}s for more than 5 minutes"
+
+      # Application Specific
+      - alert: HighResponseTime
+        expr: application_response_seconds_sum / application_response_seconds_count > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High response time"
+          description: "Application response time is {{ $value }}s for more than 5 minutes"
+
+
+  - name: container_alerts
+    rules:
+      # Container Status
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name=~".+"})
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Container {{ $labels.name }} is down"
+          description: "Container {{ $labels.name }} has been down for more than 1 minute"
+
+      # Container CPU Usage
+      - alert: ContainerHighCPUUsage
+        expr: (sum(rate(container_cpu_usage_seconds_total{name!=""}[5m])) by (name) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High CPU usage in {{ $labels.name }}"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}% for 5m"
+
+      # Container Memory Usage
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High memory usage in {{ $labels.name }}"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}% for 5m"
+
+      # Container Memory Saturation
+      - alert: ContainerMemorySaturation
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} * 100) > 95
+        for: 5m
+        labels:
+          severity: critical
+          category: resource
+        annotations:
+          summary: "Memory saturation in {{ $labels.name }}"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
+
+      # Container High Throttling
+      - alert: ContainerHighThrottling
+        expr: rate(container_cpu_cfs_throttled_seconds_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High CPU throttling in {{ $labels.name }}"
+          description: "Container {{ $labels.name }} is being throttled"
+
+      # Container Restart
+      - alert: ContainerRestarting
+        expr: changes(container_start_time_seconds[15m]) > 2
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "Container {{ $labels.name }} restarting frequently"
+          description: "Container has restarted {{ $value }} times in 15 minutes"
+
+      # Container Volume Usage
+      - alert: ContainerVolumeUsage
+        expr: (container_fs_usage_bytes / container_fs_limit_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+        annotations:
+          summary: "High volume usage in {{ $labels.name }}"
+          description: "Container volume usage is {{ $value }}%"
+
+
+# apiVersion: 1
+
+# groups:
+#   - name: example
+#     folder: General Alerts
+#     interval: 1m
+#     rules:
+#       - title: High CPU Usage
+#         condition: avg(cpu_usage_idle) < 20
+#         for: 5m
+#         labels:
+#           severity: warning
+#         annotations:
+#           summary: High CPU usage detected
+#           description: CPU usage is above 80% for more than 5 minutes
+#         data:
+#           - refId: A
+#             queryType: timeSeriesQuery
+#             relativeTimeRange:
+#               from: 600
+#               to: 0
+#             datasourceUid: your_datasource_uid
+#             model:
+#               expr: 'avg(cpu_usage_idle)'
+#               maxDataPoints: 43200
+#               interval: ''
+#               intervalMs: 1000
+
+
+#########
+# groups:
+#   - name: should_fire
+#     rules:
+#       - alert: HighPercentageError
+#         expr: |
+#           sum(rate({app="foo", env="production"} |= "error" [5m])) by (job)
+#             /
+#           sum(rate({app="foo", env="production"}[5m])) by (job)
+#             > 0.05
+#         for: 10m
+#         labels:
+#             severity: page
+#         annotations:
+#             summary: High request latency
+#   - name: credentials_leak
+#     rules:
+#       - alert: http-credentials-leaked
+#         annotations:
+#           message: "{{ $labels.job }} is leaking http basic auth credentials."
+#         expr: 'sum by (cluster, job, pod) (count_over_time({namespace="prod"} |~ "http(s?)://(\\w+):(\\w+)@" [5m]) > 0)'
+#         for: 10m
+#         labels:
+#           severity: critical
+
+
+
+# # groups:
+# # - name: example_alerts
+# #   rules:
+# #   - alert: HighRequestRate
+# #     expr: rate(http_requests_total{job="web_server"}[5m]) > 100
+# #     for: "1m"
+# #     labels:
+# #       severity: critical
+# #     annotations:
+# #       summary: High request rate on web server
+# #       description: ' has high request rate (>100 req/min) for the last 5 minutes.'
+# #   - alert: HighCPULoad
+# #     expr: node_load1 > 0.8
+# #     for: "5m"
+# #     labels:
+# #       severity: warning
+# #     annotations:
+# #       summary: High CPU load detected
+# #       description: ' has CPU load >0.8 for the last 5 minutes.'
